@@ -9,10 +9,13 @@ module.exports = {
       orgName,
       projectName,
       entry,
+      outputPath,
       orgPackagesAsExternal,
       reactPackagesAsExternal,
       externals: userExternals = [],
       minimize = false,
+      useHash = true,
+      versionName = null,
     },
     context: { env },
   }) => {
@@ -27,18 +30,21 @@ module.exports = {
         `craco-plugin-single-spa-application requires an opts.projectName string`
       );
     }
-
+    const isDev = env === 'development';
+    const filename = `${orgName}-${projectName}`
     webpackConfig.entry = path.resolve(entry || "src/index.js");
-    webpackConfig.output.filename = `${orgName}-${projectName}.js`;
+    webpackConfig.output.filename = `${filename}${!isDev && versionName ? `.${versionName}` : ''}${!isDev && useHash ? '.[fullhash]' : ''}.js`;
     webpackConfig.output.libraryTarget = "system";
     webpackConfig.output.devtoolNamespace = projectName;
-    webpackConfig.output.publicPath = "";
-
+    // webpackConfig.output.publicPath = outputPath || "/";
+    webpackConfig.output.jsonpFunction = 'wpJsonpFlightsWidget'
+    webpackConfig.output.chunkFilename = `[name].${filename}${!isDev && versionName ? versionName : ''}${!isDev && useHash ? '.[chunkhash]' : ''}.js`;
     webpackConfig.optimization.minimize = minimize;
     webpackConfig.optimization.namedModules = true;
     webpackConfig.optimization.namedChunks = true;
 
     webpackConfig.optimization.splitChunks = {
+      // minChunks: 2,
       chunks: "async",
       cacheGroups: { default: false },
     };
@@ -84,15 +90,31 @@ module.exports = {
       }),
     ];
 
+    const filename = `${orgName}-${projectName}`
     cracoConfig.devServer = cracoConfig.devServer || {};
+    cracoConfig.devServer.filename = `${filename}.js`;
     cracoConfig.devServer.historyApiFallback = true;
     cracoConfig.devServer.compress = true;
-    cracoConfig.devServer.headers = {
-      ...cracoConfig.devServer.headers,
-      "Access-Control-Allow-Origin": "*",
-    };
+    cracoConfig.devServer.hot = true;
+    cracoConfig.devServer.liveReload = true;
+    cracoConfig.devServer.open = false;
+    // cracoConfig.devServer.publicPath = path.join(__dirname, '/');
+    cracoConfig.devServer.contentBase = path.join(__dirname, 'public');
 
     return cracoConfig;
+  },
+
+  overrideDevServerConfig: ({ devServerConfig, cracoConfig, pluginOptions, context: { env, paths, proxy, allowedHost } }) => {
+    devServerConfig.filename = cracoConfig.devServer.filename
+    devServerConfig.open = false;
+    devServerConfig.hot = true;
+    devServerConfig.liveReload = true;
+    devServerConfig.headers = Object.assign(devServerConfig.headers || {}, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+    })
+    return devServerConfig;
   },
 };
 
