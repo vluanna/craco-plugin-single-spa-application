@@ -33,7 +33,7 @@ module.exports = {
     const isDev = env === 'development';
     const filename = `${orgName}-${projectName}`
     webpackConfig.entry = path.resolve(entry || "src/index.js");
-    webpackConfig.output.filename = `${filename}${!isDev && versionName ? `.${versionName}` : ''}${!isDev && useHash ? '.[fullhash]' : ''}.js`;
+    webpackConfig.output.filename = `${filename}${!isDev && versionName ? `.${versionName}` : ''}${!isDev && useHash ? '.[hash]' : ''}.js`;
     webpackConfig.output.libraryTarget = "system";
     webpackConfig.output.devtoolNamespace = projectName;
     // webpackConfig.output.publicPath = outputPath || "/";
