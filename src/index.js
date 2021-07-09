@@ -42,6 +42,7 @@ module.exports = {
     webpackConfig.optimization.minimize = minimize;
     webpackConfig.optimization.namedModules = true;
     webpackConfig.optimization.namedChunks = true;
+    webpackConfig.optimization.sideEffects = false;
 
     webpackConfig.optimization.splitChunks = {
       // minChunks: 2,
